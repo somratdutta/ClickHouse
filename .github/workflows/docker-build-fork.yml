@@ -2,11 +2,25 @@ name: Build Docker Images (Fork)
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, feature/*, bugfix/*, release/* ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: false
+        default: ''
+      platforms:
+        description: 'Platforms to build (linux/amd64, linux/arm64, or both)'
+        required: false
+        default: 'linux/amd64'
+        type: choice
+        options:
+        - linux/amd64
+        - linux/arm64
+        - linux/amd64,linux/arm64
 
 env:
   REGISTRY: ghcr.io
@@ -52,7 +66,7 @@ jobs:
       with:
         context: ./docker/server
         file: ./docker/server/Dockerfile.ubuntu
-        platforms: linux/amd64
+        platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -97,7 +111,7 @@ jobs:
       with:
         context: ./docker/keeper
         file: ./docker/keeper/Dockerfile
-        platforms: linux/amd64
+        platforms: ${{ github.event.inputs.platforms || 'linux/amd64' }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
